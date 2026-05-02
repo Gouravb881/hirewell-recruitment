@@ -32,3 +32,12 @@ yarn-error.log*
 # Local databases
 hirewell_mock_db
 .gemini/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+env/
+venv/
+*.db
