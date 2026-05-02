@@ -1,65 +1,46 @@
-# HireWell AI: Next-Gen Recruitment Engine
+# HireWell AI: Frontend Dashboard
 
-HireWell is a high-fidelity, clinical recruitment platform designed to eliminate bias and streamline the journey from job requirement to onboarding. Built for modern talent acquisition teams, it leverages a robust semantic matching engine to rank candidates with 99.8% precision.
+The user-facing dashboard for the HireWell platform, built with **React** and **Vite**. This module provides a premium, high-performance interface for managing the end-to-end recruitment lifecycle.
 
-![HireWell Banner](https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=2072&auto=format&fit=crop)
+## ✨ Highlights
 
-## 🚀 Key Modules
-
-### 1. Strategic Requirement Mapping
-*   **Semantic JD Analysis**: Extract core competencies and weights from unstructured job descriptions.
-*   **Parameter Optimization**: Set strategic parameters like hierarchy level, regional scope, and mandatory experience.
-
-### 2. Bias-Blind Screening
-*   **Batch Resume Ingestion**: Securely upload and process candidate pools in parallel.
-*   **Clinical Audit Trace**: Every score includes a detailed breakdown of matching skills and "missing" secondary traits.
-*   **Hallucination Guard**: Multi-layered confidence checks to ensure AI integrity.
-
-### 3. Verification & Assessments
-*   **Technical Task Library**: Assign role-specific challenges (React, SQL, System Design) to shortlisted talent.
-*   **Auto-Evaluation**: Automated scoring of technical submissions with composite score recalculation.
-*   **Interactive Scorecards**: Deep-dive into candidate performance with evidence-first metrics.
-
-### 4. Training & Development
-*   **Recruiter Upskilling**: Integrated training modules covering Interviewer Ethics and Advanced Bias Recognition.
-*   **Gamified Learning**: Earn XP and track your progress on the Global Champions Leaderboard.
-*   **Credentialing**: Earn professional badges and certifications directly within the platform.
-
-### 5. Talent Dashboard
-*   **Ranked Shortlists**: Beautifully organized talent pools with advanced filtering and export capabilities.
-*   **Interview Scheduling**: Real-time appointment tracking and pipeline status monitoring.
+*   **Dark-Mode First Design**: A sleek, professional aesthetic designed for long hours of talent analysis.
+*   **Real-time Batch Upload**: Advanced PDF scanning with strict **1-2 page compliance** enforcement.
+*   **Interactive Analytics**: Radar charts and dimension breakdowns for every candidate scorecard.
+*   **Gamified Training**: A fully functional learning management system for recruiters.
 
 ## 🛠 Tech Stack
 
-*   **Frontend**: React 18, Vite, Tailwind CSS
+*   **Core**: React 18, Vite
+*   **Styling**: Tailwind CSS (with custom design system tokens)
 *   **Icons**: Lucide React
-*   **Animations**: Framer Motion
-*   **State Management**: React Hooks & Local Storage Persistence
-*   **Database**: Hybrid MockDB for high-fidelity simulation and offline development.
+*   **PDF Analysis**: `pdfjs-dist` for real-time page counting and validation.
+*   **State**: LocalStorage-backed **MockDB** for seamless offline capability.
 
-## 📦 Getting Started
+## 🚀 Development
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/Gouravb881/hirewell-recruitment.git
-    ```
-
-2.  **Install Dependencies**:
+1.  **Install**:
     ```bash
     npm install
     ```
 
-3.  **Run Development Server**:
+2.  **Run**:
     ```bash
     npm run dev
     ```
 
-4.  **Access the Platform**:
-    Open [http://localhost:5173](http://localhost:5173) in your browser.
+3.  **Build**:
+    ```bash
+    npm run build
+    ```
 
-## 🛡 Security & Ethics
-HireWell is built on the principle of **Evidence-First Recruitment**. Our algorithms are designed to ignore demographic metadata, focusing purely on skill-based semantic matching to ensure the most qualified talent always rises to the top.
+## 📐 Key Pages
+*   `/`: AI Landing & Session Initialization
+*   `/recruitment`: JD Analysis & Parameter Mapping
+*   `/upload`: Candidate Batch Queue & PDF Validation
+*   `/scoring`: Semantic Matching Simulation
+*   `/shortlist`: Ranked Talent Dashboard
+*   `/training`: Recruiter Learning & Leaderboard
 
 ---
-
-*Designed for high-performance recruitment teams.*
+*Building the future of talent acquisition, one component at a time.*

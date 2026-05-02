@@ -71,42 +71,67 @@ const CandidateQueue = () => {
       setJobId(currentJobId);
     }
 
-    const allowedExtensions = [".pdf", ".docx", ".txt", ".doc"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedExtensions = [".pdf"];
+    const maxSize = 5 * 1024 * 1024; // 5MB for PDF
     const validFiles = [];
-
-    for (const file of Array.from(fileList)) {
-      const fileName = file.name.toLowerCase();
-      const isValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
-      
-      if (!isValidExtension) {
-        alert(`Unsupported file format: ${file.name}. Please upload PDF, DOCX, or TXT resume only.`);
-        continue;
-      }
-
-      if (file.size > maxSize) {
-        alert(`File too large: ${file.name}. Maximum allowed size is 5MB.`);
-        continue;
-      }
-
-      // Issue 3: Prevent duplicate files
-      const isDuplicate = files.some(existing => 
-        existing.name === file.name && 
-        (existing.size === (file.size / 1024).toFixed(1) + ' KB' || existing.size === '-')
-      );
-
-      if (isDuplicate) {
-        console.log(`Skipping duplicate file: ${file.name}`);
-        continue;
-      }
-      
-      validFiles.push(file);
-    }
-
-    if (validFiles.length === 0) return;
 
     setUploading(true);
     try {
+      // Import PDF.js
+      const pdfjsLib = await import('pdfjs-dist');
+      // Set worker path - using a robust CDN fallback
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs`;
+
+      for (const file of Array.from(fileList)) {
+        const fileName = file.name.toLowerCase();
+        
+        // 1. Extension Check
+        if (!fileName.endsWith(".pdf")) {
+          alert(`Policy Restriction: Only PDF files are allowed. Skipped: ${file.name}`);
+          continue;
+        }
+
+        // 2. Size Check
+        if (file.size > maxSize) {
+          alert(`File too large: ${file.name}. Max 5MB.`);
+          continue;
+        }
+
+        // 3. Page Count Check (1-2 pages only)
+        let isCompliant = true;
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdf = await loadingTask.promise;
+          
+          if (pdf.numPages < 1 || pdf.numPages > 2) {
+            alert(`Compliance Error: "${file.name}" has ${pdf.numPages} pages. Resumes must be 1 or 2 pages only.`);
+            isCompliant = false;
+          }
+        } catch (err) {
+          console.error("PDF Parsing Error for", file.name, err);
+          // If parsing fails, we allow it but log a warning (could be an encrypted PDF)
+          console.warn("Could not verify page count. Proceeding with caution.");
+        }
+
+        if (!isCompliant) continue;
+
+        // 4. Duplicate Check
+        const isDuplicate = files.some(existing => 
+          existing.name === file.name && 
+          (existing.size === (file.size / 1024).toFixed(1) + ' KB' || existing.size === '-')
+        );
+
+        if (isDuplicate) {
+          console.log("Skipping duplicate:", file.name);
+          continue;
+        }
+        
+        validFiles.push(file);
+      }
+
+      if (validFiles.length === 0) return;
+
       for (const file of validFiles) {
         try {
           await uploadCandidate(currentJobId, file);
@@ -121,8 +146,11 @@ const CandidateQueue = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    processFiles(e.target.files);
+  const handleFileChange = async (e) => {
+    const fileList = e.target.files;
+    if (fileList && fileList.length > 0) {
+      await processFiles(fileList);
+    }
     // Reset input so the same file can be re-selected
     e.target.value = '';
   };
@@ -180,7 +208,7 @@ const CandidateQueue = () => {
         </div>
       </header>
 
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" accept=".pdf,.docx,.txt,.doc" />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" accept=".pdf" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="w-full lg:col-span-9 space-y-8 overflow-hidden">
@@ -228,7 +256,16 @@ const CandidateQueue = () => {
                       <td className="py-4 pl-6 text-sm font-bold text-text-muted">#{String(file.id).padStart(2, '0')}</td>
                       <td className="py-4">
                         <div className="flex items-center gap-2 font-bold text-sm text-text">
-                          <FileText size={16} /> {file.name}
+                          {file.name.toLowerCase().match(/\.(jpg|jpeg|png)$/) ? (
+                            <div className="w-8 h-8 bg-warning-bg text-warning rounded-lg flex items-center justify-center"><UploadCloud size={14} /></div>
+                          ) : file.name.toLowerCase().match(/\.(mp4|mov)$/) ? (
+                            <div className="w-8 h-8 bg-error-bg text-error rounded-lg flex items-center justify-center"><Play size={14} /></div>
+                          ) : file.name.toLowerCase().match(/\.(mp3|wav)$/) ? (
+                            <div className="w-8 h-8 bg-primary-light text-primary rounded-lg flex items-center justify-center"><Bell size={14} /></div>
+                          ) : (
+                            <div className="w-8 h-8 bg-surface-light text-text-muted rounded-lg flex items-center justify-center"><FileText size={14} /></div>
+                          )}
+                          <div className="truncate max-w-[200px]">{file.name}</div>
                         </div>
                       </td>
                       <td className="py-4 text-xs text-text-muted font-bold">{file.size || '-'}</td>

@@ -1,66 +1,68 @@
-# HireWell AI: Next-Gen Recruitment Engine
+# HireWell AI: Full-Stack Recruitment Ecosystem
 
-HireWell is a high-fidelity, clinical recruitment platform designed to eliminate bias and streamline the journey from job requirement to onboarding. Built for modern talent acquisition teams, it leverages a robust semantic matching engine to rank candidates with 99.8% precision.
+HireWell is a state-of-the-art, AI-driven recruitment platform designed to transform unstructured resumes into actionable, ranked shortlists. This repository contains the unified codebase for both the **React/Vite Frontend** and the **FastAPI Backend**.
 
 ![HireWell Banner](https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=2072&auto=format&fit=crop)
 
-## 🚀 Key Modules
+## 📁 Project Structure
 
-### 1. Strategic Requirement Mapping
-*   **Semantic JD Analysis**: Extract core competencies and weights from unstructured job descriptions.
-*   **Parameter Optimization**: Set strategic parameters like hierarchy level, regional scope, and mandatory experience.
+```text
+Hire well/
+├── frontend-app/        # React + Vite + Tailwind CSS (UI/UX Layer)
+├── backend/             # FastAPI + SQLAlchemy (Compute & API Layer)
+├── README.md            # Unified Project Documentation
+└── .gitignore           # Global exclusion rules
+```
 
-### 2. Bias-Blind Screening
-*   **Batch Resume Ingestion**: Securely upload and process candidate pools in parallel.
-*   **Clinical Audit Trace**: Every score includes a detailed breakdown of matching skills and "missing" secondary traits.
-*   **Hallucination Guard**: Multi-layered confidence checks to ensure AI integrity.
+## 🚀 Full-Stack Setup Guide
 
-### 3. Verification & Assessments
-*   **Technical Task Library**: Assign role-specific challenges (React, SQL, System Design) to shortlisted talent.
-*   **Auto-Evaluation**: Automated scoring of technical submissions with composite score recalculation.
-*   **Interactive Scorecards**: Deep-dive into candidate performance with evidence-first metrics.
+To run the complete HireWell ecosystem on your local machine, follow these steps:
 
-### 4. Training & Development
-*   **Recruiter Upskilling**: Integrated training modules covering Interviewer Ethics and Advanced Bias Recognition.
-*   **Gamified Learning**: Earn XP and track your progress on the Global Champions Leaderboard.
-*   **Credentialing**: Earn professional badges and certifications directly within the platform.
+### 1. Start the Backend (API & Engine)
+```bash
+cd backend
+python -m venv venv
+# Windows:
+.\venv\Scripts\activate
+# Install deps
+pip install -r requirements.txt
+# Run server
+uvicorn app.main:app --reload --port 8000
+```
 
-### 5. Talent Dashboard
-*   **Ranked Shortlists**: Beautifully organized talent pools with advanced filtering and export capabilities.
-*   **Interview Scheduling**: Real-time appointment tracking and pipeline status monitoring.
+### 2. Start the Frontend (Dashboard & UI)
+```bash
+cd frontend-app
+npm install
+npm run dev
+```
 
-## 🛠 Tech Stack
-
-*   **Frontend**: React 18, Vite, Tailwind CSS
-*   **Icons**: Lucide React
-*   **Animations**: Framer Motion
-*   **State Management**: React Hooks & Local Storage Persistence
-*   **Database**: Hybrid MockDB for high-fidelity simulation and offline development.
-
-## 📦 Getting Started
-
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/Gouravb881/hirewell-recruitment.git
-    ```
-
-2.  **Install Dependencies**:
-    ```bash
-    cd frontend-app
-    npm install
-    ```
-
-3.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
-
-4.  **Access the Platform**:
-    Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-## 🛡 Security & Ethics
-HireWell is built on the principle of **Evidence-First Recruitment**. Our algorithms are designed to ignore demographic metadata, focusing purely on skill-based semantic matching to ensure the most qualified talent always rises to the top.
+The platform will be accessible at [http://localhost:5173](http://localhost:5173).
 
 ---
 
-*Designed for high-performance recruitment teams.*
+## 💎 Key Modules
+
+### 🏛 AI Semantic Matching
+Eliminate manual screening. Our backend extracts skills, experience, and domain knowledge from **1-2 page PDF resumes** and matches them against your Job Description with clinical precision.
+
+### 🧪 Technical Verification
+Move beyond the resume. Assign technical tasks (React, SQL, System Design) directly from the Shortlist Dashboard and track auto-evaluated scores.
+
+### 🎓 Recruiter Training
+Upskill your talent acquisition team with integrated learning modules, XP tracking, and a global leaderboard to foster healthy competition and ethical hiring.
+
+### 📊 Explainable Analytics
+Every candidate score is backed by a dimension breakdown (Technical, Growth, Culture, Alignment) to ensure transparency in every hiring decision.
+
+## 🛡 System Policies
+*   **Resume Compliance**: The system strictly enforces a **1-2 page PDF-only** policy for resumes to ensure concise and relevant applications.
+*   **Simulation Mode**: The frontend includes a high-fidelity **MockDB** fallback, allowing the platform to be demoed or tested even when the backend is unreachable.
+
+## 🛠 Tech Stack Summary
+*   **Frontend**: React, Vite, Tailwind CSS, Lucide Icons, Framer Motion.
+*   **Backend**: Python, FastAPI, Pydantic, SQLAlchemy, Alembic.
+*   **Intelligence**: Semantic Vector Matching, Regex-based Parsing, Composite Scoring Algorithms.
+
+---
+*Empowering recruiters to find the 1% through data-driven intelligence.*

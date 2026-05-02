@@ -66,6 +66,7 @@ export const MockDB = {
     const newCand = {
       id: `A${maxId + 1}`,
       name: file.name,
+      type: file.type || 'application/octet-stream',
       status: 'Ready',
       score: 0,
       aiUsage: 0,
@@ -78,12 +79,12 @@ export const MockDB = {
       onboardingProgress: 0,
       onboardingStatus: 'Not Started',
       interviewScore: null,
-      contentBase64: '' // will be set after reading
+      contentBase64: '',
+      isMedia: file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')
     };
     return new Promise((resolve) => {
-      // Async read – store result then resolve
       reader.onload = () => {
-        newCand.contentBase64 = reader.result.split(',')[1]; // strip DataURL prefix
+        newCand.contentBase64 = reader.result.split(',')[1];
         data.candidates.push(newCand);
         MockDB.save(data);
         resolve(newCand);
