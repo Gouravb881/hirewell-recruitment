@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HireWell — Candidate Upload</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#EAEBF8;--primary:#4B4EDE;--primary-light:#EEF0FF;--primary-mid:#6366F1;--text-dark:#1A1A2E;--text-mid:#5A5A7A;--text-light:#9898B8;--border:#EEEEF8;--green:#22C55E;--orange:#F97316;--red:#EF4444;--shadow:0 2px 16px rgba(75,78,222,0.08);}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;color:var(--text-dark);}
+.sidebar{width:220px;min-height:100vh;background:#fff;display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;box-shadow:2px 0 12px rgba(75,78,222,0.06);}
+.logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;}
+.logo-icon{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;}
+.nav{display:flex;flex-direction:column;gap:2px;padding:0 12px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--text-mid);transition:all .2s;}
+.nav-item:hover{background:var(--primary-light);color:var(--primary);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;}
+.sidebar-bottom{padding:12px 12px 0;}
+.logout{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--text-light);}
+.main{flex:1;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;gap:16px;padding:20px 32px;}
+.topbar-title{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;}
+.topbar-sub{font-size:13px;color:var(--text-light);margin-top:2px;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;border:2.5px solid #fff;}
+.progress-bar{display:flex;align-items:center;gap:0;padding:0 32px 20px;}
+.prog-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;}
+.prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.prog-step.done .prog-dot{background:var(--green);color:#fff;}
+.prog-step.active .prog-dot{background:var(--primary);color:#fff;}
+.prog-step.todo .prog-dot{background:var(--border);color:var(--text-light);}
+.prog-step.done span,.prog-step.active span{color:var(--text-dark);}
+.prog-step.todo span{color:var(--text-light);}
+.prog-line{flex:1;height:2px;background:var(--border);margin:0 8px;max-width:40px;}
+.prog-line.done{background:var(--green);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.content{flex:1;padding:0 32px 32px;display:grid;grid-template-columns:1fr 280px;gap:24px;}
+/* UPLOAD */
+.upload-section{display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s ease both;}
+.drop-zone{background:#fff;border:2.5px dashed var(--primary);border-radius:20px;padding:48px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;transition:all .3s;}
+.drop-zone:hover,.drop-zone.drag-over{background:var(--primary-light);border-color:var(--primary-mid);}
+.drop-icon{width:64px;height:64px;background:var(--primary-light);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.drop-zone h3{font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text-dark);}
+.drop-zone p{font-size:13px;color:var(--text-light);text-align:center;}
+.drop-zone p span{color:var(--primary);font-weight:700;cursor:pointer;}
+.file-types{display:flex;gap:8px;margin-top:4px;}
+.file-type{padding:4px 12px;background:var(--primary-light);color:var(--primary);border-radius:20px;font-size:11.5px;font-weight:700;}
+/* TABLE */
+.queue-card{background:#fff;border-radius:20px;border:1.5px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.queue-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1.5px solid var(--border);}
+.queue-header h3{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;}
+.count-badge{background:var(--primary);color:#fff;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{padding:11px 16px;font-size:11px;font-weight:700;color:var(--text-light);text-align:left;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border);}
+td{padding:12px 16px;font-size:13px;font-weight:600;color:var(--text-dark);border-bottom:1px solid var(--border);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{transition:background .15s;animation:fadeUp .3s ease both;}
+tbody tr:nth-child(1){animation-delay:.05s}tbody tr:nth-child(2){animation-delay:.1s}tbody tr:nth-child(3){animation-delay:.15s}tbody tr:nth-child(4){animation-delay:.2s}tbody tr:nth-child(5){animation-delay:.25s}
+tbody tr:hover{background:var(--primary-light);}
+.file-name{display:flex;align-items:center;gap:10px;}
+.file-icon{width:32px;height:32px;background:var(--primary-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.s-queued{background:#F5F5F5;color:var(--text-light);}
+.s-parsing{background:#EEF0FF;color:var(--primary);}
+.s-ready{background:#E8F5E9;color:#2E7D32;}
+.s-error{background:#FFEBEE;color:#C62828;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.s-parsing .dot{animation:pulse 1.2s ease infinite;}
+.dot{width:7px;height:7px;border-radius:50%;}
+.action-link{color:var(--primary);font-size:12.5px;font-weight:700;cursor:pointer;background:none;border:none;}
+.action-link:hover{text-decoration:underline;}
+/* RIGHT SIDEBAR */
+.right-panel{display:flex;flex-direction:column;gap:16px;animation:fadeUp .4s ease .1s both;}
+.role-card{background:#fff;border-radius:16px;padding:20px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.role-card h4{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;}
+.role-detail{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--text-dark);margin-bottom:4px;}
+.role-sub{font-size:12.5px;color:var(--text-mid);}
+.divider{height:1px;background:var(--border);margin:12px 0;}
+.stat-mini{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.stat-mini:last-child{margin-bottom:0;}
+.stat-mini-lbl{font-size:12.5px;color:var(--text-mid);font-weight:600;}
+.stat-mini-val{font-size:13px;font-weight:700;color:var(--text-dark);}
+/* UPLOAD PROGRESS */
+.upload-progress{background:#fff;border-radius:16px;padding:20px;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.upload-progress h4{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px;}
+.prog-bar-wrap{background:var(--border);border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px;}
+.prog-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--primary),var(--primary-mid));transition:width .5s ease;}
+.prog-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-light);font-weight:700;}
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(75,78,222,.3);transition:all .2s;}
+.btn-primary:hover{background:var(--primary-mid);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--text-mid);border:1.5px solid var(--border);border-radius:12px;padding:11px 24px;font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-icon">H</div>HireWell</div>
+  <nav class="nav">
+    <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Recruitment</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>Interview</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Onboarding</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Interview Task</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Appointments</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/></svg>Training</div>
+  </nav>
+  <div class="sidebar-bottom"><div class="logout"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</div></div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title">Candidate Upload</div><div class="topbar-sub">Upload resumes to begin AI screening</div></div>
+    <div class="topbar-right"><div class="avatar">SA</div></div>
+  </div>
+  <div class="progress-bar">
+    <div class="prog-step done"><div class="prog-dot">✓</div><span>JD Setup</span></div>
+    <div class="prog-line done"></div>
+    <div class="prog-step done"><div class="prog-dot">✓</div><span>JD Analysis</span></div>
+    <div class="prog-line done"></div>
+    <div class="prog-step active"><div class="prog-dot">3</div><span>Upload Resumes</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step todo"><div class="prog-dot">4</div><span>Screening</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step todo"><div class="prog-dot">5</div><span>Interview</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step todo"><div class="prog-dot">6</div><span>Scorecard</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step todo"><div class="prog-dot">7</div><span>Shortlist</span></div>
+  </div>
+  <div class="content">
+    <div class="upload-section">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📂</div>
+        <h3>Drop resumes here</h3>
+        <p>Drag &amp; drop PDF, DOCX or TXT files<br/>or <span onclick="addSampleFiles()">browse to upload</span></p>
+        <div class="file-types">
+          <div class="file-type">PDF</div>
+          <div class="file-type">DOCX</div>
+          <div class="file-type">TXT</div>
+        </div>
+      </div>
+      <div class="queue-card">
+        <div class="queue-header">
+          <h3>Resume Queue</h3>
+          <div class="count-badge" id="countBadge">5 / 10 uploaded</div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>File Name</th><th>Size</th><th>Parse Status</th><th>Action</th></tr></thead>
+          <tbody id="fileTable">
+            <tr>
+              <td style="color:var(--text-light);font-weight:700;">01</td>
+              <td><div class="file-name"><div class="file-icon">📄</div>resume_candidate_01.pdf</div></td>
+              <td style="color:var(--text-light);">284 KB</td>
+              <td><span class="status-badge s-ready"><span class="dot" style="background:#22C55E;"></span>Ready</span></td>
+              <td><button class="action-link">Preview</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-light);font-weight:700;">02</td>
+              <td><div class="file-name"><div class="file-icon">📄</div>john_smith_cv.docx</div></td>
+              <td style="color:var(--text-light);">196 KB</td>
+              <td><span class="status-badge s-ready"><span class="dot" style="background:#22C55E;"></span>Ready</span></td>
+              <td><button class="action-link">Preview</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-light);font-weight:700;">03</td>
+              <td><div class="file-name"><div class="file-icon">📝</div>candidate_resume_03.txt</div></td>
+              <td style="color:var(--text-light);">42 KB</td>
+              <td><span class="status-badge s-parsing"><span class="dot" style="background:var(--primary);"></span>Parsing...</span></td>
+              <td><button class="action-link" style="color:var(--text-light);">Wait</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-light);font-weight:700;">04</td>
+              <td><div class="file-name"><div class="file-icon">📄</div>ml_engineer_resume.pdf</div></td>
+              <td style="color:var(--text-light);">512 KB</td>
+              <td><span class="status-badge s-ready"><span class="dot" style="background:#22C55E;"></span>Ready</span></td>
+              <td><button class="action-link">Preview</button></td>
+            </tr>
+            <tr>
+              <td style="color:var(--text-light);font-weight:700;">05</td>
+              <td><div class="file-name"><div class="file-icon">📄</div>applicant_5_cv.pdf</div></td>
+              <td style="color:var(--text-light);">320 KB</td>
+              <td><span class="status-badge s-error"><span class="dot" style="background:var(--red);"></span>Error</span></td>
+              <td><button class="action-link" style="color:var(--red);">Retry</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="role-card">
+        <h4>Active Role</h4>
+        <div class="role-detail">Senior ML Engineer</div>
+        <div class="role-sub">Engineering · Remote · 5+ yrs</div>
+        <div class="divider"></div>
+        <div class="stat-mini"><span class="stat-mini-lbl">Must-Haves</span><span class="stat-mini-val">8 skills</span></div>
+        <div class="stat-mini"><span class="stat-mini-lbl">Nice-to-Haves</span><span class="stat-mini-val">5 skills</span></div>
+        <div class="stat-mini"><span class="stat-mini-lbl">Red Flags</span><span class="stat-mini-val">4 triggers</span></div>
+        <div class="stat-mini"><span class="stat-mini-lbl">Bias Mode</span><span class="stat-mini-val" style="color:var(--green);">Full Anon ✓</span></div>
+      </div>
+      <div class="upload-progress">
+        <h4>Batch Progress</h4>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:60%"></div></div>
+        <div class="prog-labels"><span>3 / 5 ready</span><span>60%</span></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--green);font-weight:700;">✓ Ready</span><span>3 files</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--primary);font-weight:700;">⟳ Parsing</span><span>1 file</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--red);font-weight:700;">✗ Error</span><span>1 file</span></div>
+        </div>
+      </div>
+      <button class="btn-primary">Begin AI Screening →</button>
+      <button class="btn-ghost">+ Add More Resumes</button>
+    </div>
+  </div>
+</div>
+<script>
+const dropZone=document.getElementById('dropZone');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');});
+function addSampleFiles(){
+  const input=document.createElement('input');input.type='file';input.multiple=true;input.accept='.pdf,.docx,.txt';input.click();
+}
+</script>
+</body></html>
