@@ -416,10 +416,10 @@ tbody tr.active-row td{color:#fff;}
         </div>
         <div>
           <div class="applicant-item">
-            <div class="applicant-avatar" style="background:linear-gradient(135deg,#4B4EDE,#818CF8);">MT</div>
+            <div class="applicant-avatar" style="background:linear-gradient(135deg,#4B4EDE,#818CF8);">AR</div>
             <div class="applicant-info">
-              <div class="a-name">Candidate #A3</div>
-              <div class="a-role">Applied for <span>ML Engineer</span></div>
+              <div class="a-name">Alex Rivers</div>
+              <div class="a-role">Applied for <span>Senior UX Designer</span></div>
             </div>
             <div class="action-btns">
               <button class="action-btn msg">💬</button>
@@ -427,10 +427,10 @@ tbody tr.active-row td{color:#fff;}
             </div>
           </div>
           <div class="applicant-item">
-            <div class="applicant-avatar" style="background:linear-gradient(135deg,#EC4899,#F97316);">ZT</div>
+            <div class="applicant-avatar" style="background:linear-gradient(135deg,#EC4899,#F97316);">JL</div>
             <div class="applicant-info">
-              <div class="a-name">Candidate #B2</div>
-              <div class="a-role">Applied for <span>UX Designer</span></div>
+              <div class="a-name">Jordan Lee</div>
+              <div class="a-role">Applied for <span>Senior UX Designer</span></div>
             </div>
             <div class="action-btns">
               <button class="action-btn msg">💬</button>
@@ -438,32 +438,10 @@ tbody tr.active-row td{color:#fff;}
             </div>
           </div>
           <div class="applicant-item">
-            <div class="applicant-avatar" style="background:linear-gradient(135deg,#14B8A6,#06B6D4);">NA</div>
+            <div class="applicant-avatar" style="background:linear-gradient(135deg,#14B8A6,#06B6D4);">PS</div>
             <div class="applicant-info">
-              <div class="a-name">Candidate #C7</div>
-              <div class="a-role">Applied for <span>iOS Developer</span></div>
-            </div>
-            <div class="action-btns">
-              <button class="action-btn msg">💬</button>
-              <button class="action-btn call">📞</button>
-            </div>
-          </div>
-          <div class="applicant-item">
-            <div class="applicant-avatar" style="background:linear-gradient(135deg,#8B5CF6,#6366F1);">JS</div>
-            <div class="applicant-info">
-              <div class="a-name">Candidate #D1</div>
-              <div class="a-role">Applied for <span>Data Analyst</span></div>
-            </div>
-            <div class="action-btns">
-              <button class="action-btn msg">💬</button>
-              <button class="action-btn call">📞</button>
-            </div>
-          </div>
-          <div class="applicant-item">
-            <div class="applicant-avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444);">KP</div>
-            <div class="applicant-info">
-              <div class="a-name">Candidate #E5</div>
-              <div class="a-role">Applied for <span>Backend Engineer</span></div>
+              <div class="a-name">Pat Smith</div>
+              <div class="a-role">Applied for <span>Senior UX Designer</span></div>
             </div>
             <div class="action-btns">
               <button class="action-btn msg">💬</button>
@@ -481,21 +459,15 @@ tbody tr.active-row td{color:#fff;}
         </div>
         <div class="training-cards">
           <div class="training-card">
-            <div class="t-avatar" style="background:linear-gradient(135deg,#4B4EDE,#818CF8);">A3</div>
-            <div class="t-name">#A3</div>
-            <div class="t-role">ML Engineer</div>
+            <div class="t-avatar" style="background:linear-gradient(135deg,#4B4EDE,#818CF8);">AR</div>
+            <div class="t-name">Alex R.</div>
+            <div class="t-role">Senior UX</div>
             <button class="btn-train">Start AI →</button>
           </div>
           <div class="training-card">
-            <div class="t-avatar" style="background:linear-gradient(135deg,#EC4899,#F97316);">F2</div>
-            <div class="t-name">#F2</div>
-            <div class="t-role">UX Designer</div>
-            <button class="btn-train">Start AI →</button>
-          </div>
-          <div class="training-card">
-            <div class="t-avatar" style="background:linear-gradient(135deg,#14B8A6,#06B6D4);">D4</div>
-            <div class="t-name">#D4</div>
-            <div class="t-role">iOS Dev</div>
+            <div class="t-avatar" style="background:linear-gradient(135deg,#EC4899,#F97316);">JL</div>
+            <div class="t-name">Jordan L.</div>
+            <div class="t-role">Senior UX</div>
             <button class="btn-train">Start AI →</button>
           </div>
         </div>
@@ -507,7 +479,14 @@ tbody tr.active-row td{color:#fff;}
 
 <script>
 // ─── SHARED STATE ───────────────────────────────────────────────────────────
-let state = { batches: [], candidates: [] };
+let state = {
+  batches: [],
+  candidates: [
+    { id: 'A1', name: 'Alex Rivers', role: 'Senior UX Designer', score: 94, stage: 0, decision: 'shortlist' },
+    { id: 'A2', name: 'Jordan Lee', role: 'Senior UX Designer', score: 72, stage: 0, decision: 'review' },
+    { id: 'A3', name: 'Pat Smith', role: 'Senior UX Designer', score: 38, stage: 0, decision: 'hold' }
+  ]
+};
 
 // ─── PERSISTENCE ────────────────────────────────────────────────────────────
 function save() {
