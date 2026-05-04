@@ -166,12 +166,12 @@ const CandidateScorecard = () => {
                  </h3>
                  <div className="space-y-6">
                     <div>
-                       <div className="text-sm font-bold text-text mb-2">Exceptional System Design</div>
-                       <p className="text-xs text-text-mid leading-relaxed italic">"Candidate demonstrated deep understanding of distributed systems and effectively identified bottlenecks."</p>
+                       <div className="text-sm font-bold text-text mb-2">Advanced Design Systems</div>
+                       <p className="text-xs text-text-mid leading-relaxed italic">"Candidate built and scaled a multi-platform design system in Figma for 200+ designers."</p>
                     </div>
                     <div>
-                       <div className="text-sm font-bold text-text mb-2">High Communication Clarity</div>
-                       <p className="text-xs text-text-mid leading-relaxed italic">"Answers were highly structured and concisely explained complex concepts."</p>
+                       <div className="text-sm font-bold text-text mb-2">WCAG Accessibility Expert</div>
+                       <p className="text-xs text-text-mid leading-relaxed italic">"Expert-level knowledge of accessible design patterns and inclusive UX research."</p>
                     </div>
                  </div>
               </div>
@@ -182,8 +182,8 @@ const CandidateScorecard = () => {
                  </h3>
                  <div className="space-y-6">
                     <div className="bg-error-bg dark:bg-[#FFEBEE05] p-5 rounded-2xl border border-error/10">
-                       <div className="text-sm font-bold text-error mb-2">Limited AWS Direct Exp.</div>
-                       <p className="text-[11px] text-error/70 leading-relaxed italic">"Candidate mentioned GCP expertise but lacked direct experience with AWS services."</p>
+                       <div className="text-sm font-bold text-error mb-2">Role Domain Mismatch</div>
+                       <p className="text-[11px] text-error/70 leading-relaxed italic">"Candidate background is heavily focused on Print Management rather than Digital Product Design."</p>
                     </div>
                  </div>
               </div>
@@ -196,21 +196,21 @@ const CandidateScorecard = () => {
                     <div>
                        <div className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest mb-4">Strengths</div>
                        <ul className="space-y-3 list-disc pl-4 text-[11px] md:text-xs font-bold dark:text-text-muted">
-                          <li>9.2/10 Technical fit in Database logic.</li>
-                          <li>Clear, STAR-format responses.</li>
-                          <li>Proactive system-level thinking.</li>
+                          <li>Expert Figma component management.</li>
+                          <li>Strong user research methodology.</li>
+                          <li>Proactive design-level thinking.</li>
                        </ul>
                     </div>
                     <div>
                        <div className="text-[9px] md:text-[10px] font-black text-error uppercase tracking-widest mb-4">Concerns</div>
                        <ul className="space-y-3 list-disc pl-4 text-[11px] md:text-xs font-bold dark:text-text-muted">
-                          <li>Onboarding time for AWS environment.</li>
+                          <li>Significant lack of digital design portfolio.</li>
                        </ul>
                     </div>
                  </div>
                  <div className="bg-surface-light dark:bg-white/5 p-5 md:p-6 rounded-[20px] md:rounded-[24px] border border-border">
                     <div className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Suggested Next Step</div>
-                    <p className="text-xs md:text-sm font-bold text-text dark:text-white italic">"Proceed to final round with the Engineering Manager focusing on cloud deployment workflows."</p>
+                    <p className="text-xs md:text-sm font-bold text-text dark:text-white italic">"Proceed to portfolio review with Design Director focusing on design system scalability."</p>
                  </div>
               </div>
             </div>
