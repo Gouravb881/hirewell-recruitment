@@ -505,5 +505,173 @@ tbody tr.active-row td{color:#fff;}
   </div>
 </div>
 
+<script>
+// ─── SHARED STATE ───────────────────────────────────────────────────────────
+let state = { batches: [], candidates: [] };
+
+// ─── PERSISTENCE ────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('recruitment_v2', JSON.stringify(state)); } catch(e) {}
+}
+async function load() {
+  try {
+    const ls = localStorage.getItem('recruitment_v2');
+    if (ls) { state = JSON.parse(ls); return; }
+  } catch(e) {}
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+const STAGES = ['Resume Screen', 'Technical Test', 'AI Interview'];
+const STAGE_CLASSES = ['status-resume', 'status-task', 'status-tech'];
+const STAGE_LABELS  = ['Resume Review', 'Task Pending', 'Tech Interview'];
+const DECISION_LABELS = { shortlist: 'Shortlisted ✓', review: 'Under Review', hold: 'On Hold' };
+const GRADIENTS = [
+  'linear-gradient(135deg,#4B4EDE,#818CF8)',
+  'linear-gradient(135deg,#EC4899,#F97316)',
+  'linear-gradient(135deg,#14B8A6,#06B6D4)',
+  'linear-gradient(135deg,#8B5CF6,#6366F1)',
+  'linear-gradient(135deg,#F59E0B,#EF4444)',
+  'linear-gradient(135deg,#22C55E,#16A34A)',
+];
+
+function scoreColor(score) {
+  if (score >= 90) return { bg:'#F0FDF4', color:'#16A34A' };
+  if (score >= 75) return { bg:'#EEF0FF', color:'#4B4EDE' };
+  return { bg:'#FFF7ED', color:'#C2410C' };
+}
+
+function initials(filename) {
+  // Use last two characters of the file name (before extension) as avatar initials
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.slice(-2).toUpperCase() || '??';
+}
+
+// ─── RENDER: RECRUITMENT PROGRESS TABLE ─────────────────────────────────────
+function renderProgress() {
+  // The progress table is the first (and only) tbody in the main content
+  const tables = document.querySelectorAll('.table-card table tbody');
+  if (!tables.length) return;
+  const tbody = tables[0];
+
+  if (state.candidates.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:28px;">No candidates yet — upload resumes on the Upload screen</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = state.candidates.map((c, i) => {
+    const sc = scoreColor(c.score);
+    const stageClass = STAGE_CLASSES[c.stage] || 'status-resume';
+    const stageLabel = STAGE_LABELS[c.stage] || 'Resume Review';
+    const shortId = 'Candidate #' + (i + 1);
+    const decisionOpts = ['shortlist','review','hold'].map(d =>
+      `<option value="${d}" ${c.decision === d ? 'selected' : ''}>${DECISION_LABELS[d]}</option>`
+    ).join('');
+    return `
+      <tr>
+        <td><strong>${shortId}</strong></td>
+        <td>${c.role}</td>
+        <td><span class="score-pill" style="background:${sc.bg};color:${sc.color};">● ${c.score} / 100</span></td>
+        <td>${STAGES[c.stage]}</td>
+        <td><span class="status-badge ${stageClass}"><span class="dot"></span>${stageLabel}</span></td>
+        <td>
+          <select style="border:none;background:transparent;font-size:12px;font-weight:700;color:var(--text-mid);cursor:pointer;outline:none;"
+            onchange="onDecisionChange('${c.id}', this.value)">
+            ${decisionOpts}
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ─── RENDER: NEW APPLICANTS (right panel) ───────────────────────────────────
+function renderApplicants() {
+  // Target the applicant items container — it's inside .content-right
+  const contentRight = document.querySelector('.content-right');
+  if (!contentRight) return;
+
+  // New Applicants list
+  const applicantContainers = contentRight.querySelectorAll('.applicant-item');
+  const applicantWrapper = applicantContainers.length
+    ? applicantContainers[0].closest('div')
+    : null;
+
+  if (applicantWrapper) {
+    if (state.candidates.length === 0) {
+      applicantWrapper.innerHTML = '<p style="font-size:12px;color:var(--text-light);padding:8px 0;">No applicants yet</p>';
+    } else {
+      applicantWrapper.innerHTML = state.candidates.slice().reverse().slice(0, 5).map((c, i) => {
+        const grad = GRADIENTS[i % GRADIENTS.length];
+        const init = initials(c.file);
+        return `
+          <div class="applicant-item">
+            <div class="applicant-avatar" style="background:${grad};">${init}</div>
+            <div class="applicant-info">
+              <div class="a-name">${c.file.replace(/\.[^.]+$/, '')}</div>
+              <div class="a-role">Applied for <span>${c.role}</span></div>
+            </div>
+            <div class="action-btns">
+              <button class="action-btn msg">💬</button>
+              <button class="action-btn call">📞</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // AI Interview queue cards (training-cards)
+  const trainingCards = contentRight.querySelector('.training-cards');
+  if (trainingCards) {
+    const aiCandidates = state.candidates.filter(c => c.stage === 2);
+    if (aiCandidates.length === 0) {
+      trainingCards.innerHTML = '<p style="font-size:12px;color:var(--text-light);">No candidates ready for AI Interview yet</p>';
+    } else {
+      trainingCards.innerHTML = aiCandidates.slice(0, 3).map((c, i) => {
+        const grad = GRADIENTS[i % GRADIENTS.length];
+        const init = initials(c.file);
+        return `
+          <div class="training-card">
+            <div class="t-avatar" style="background:${grad};">${init}</div>
+            <div class="t-name">${init}</div>
+            <div class="t-role">${c.role.split(' ')[0]}</div>
+            <button class="btn-train">Start AI →</button>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// ─── RENDER: LEADERBOARD (ranked by score, injected as a second pass) ───────
+function renderLeaderboard() {
+  // The leaderboard renders into the same Recruitment Progress table
+  // but sorted by score DESC — this is handled inside renderProgress already.
+  // Additionally update the hero banner counters if present.
+  const heroP = document.querySelector('.hero-text p');
+  if (heroP && state.candidates.length > 0) {
+    const pending = state.candidates.filter(c => c.decision === 'hold').length;
+    heroP.innerHTML = `You have <strong>${pending} candidate${pending !== 1 ? 's' : ''}</strong> awaiting review.<br/>HireWell is ready to analyze — bias-blind.`;
+  }
+}
+
+// ─── DECISION CHANGE HANDLER ─────────────────────────────────────────────────
+function onDecisionChange(candidateId, newDecision) {
+  const c = state.candidates.find(c => c.id === candidateId);
+  if (c) { c.decision = newDecision; }
+  save();
+  renderAll();
+}
+
+// ─── RENDER ALL ──────────────────────────────────────────────────────────────
+function renderAll() {
+  renderProgress();
+  renderApplicants();
+  renderLeaderboard();
+}
+
+// ─── STARTUP ─────────────────────────────────────────────────────────────────
+load().then(() => renderAll());
+</script>
 </body>
 </html>

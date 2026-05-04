@@ -234,6 +234,154 @@ svg.ring{transform:rotate(-90deg);}
   </div>
 </div>
 <script>
+// ─── SHARED STATE ────────────────────────────────────────────────────────────
+let state = { batches: [], candidates: [] };
+
+const GRADIENTS = [
+  'linear-gradient(135deg,#4B4EDE,#818CF8)',
+  'linear-gradient(135deg,#EC4899,#F97316)',
+  'linear-gradient(135deg,#14B8A6,#06B6D4)',
+  'linear-gradient(135deg,#8B5CF6,#6366F1)',
+  'linear-gradient(135deg,#F59E0B,#EF4444)',
+  'linear-gradient(135deg,#22C55E,#16A34A)',
+];
+
+// ─── PERSISTENCE ─────────────────────────────────────────────────────────────
+async function load() {
+  try {
+    const ls = localStorage.getItem('recruitment_v2');
+    if (ls) { state = JSON.parse(ls); }
+  } catch(e) {}
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function initials(filename) {
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.slice(-2).toUpperCase() || '??';
+}
+
+function scoreGrad(score) {
+  if (score >= 90) return 'linear-gradient(135deg,#22C55E,#16A34A)';
+  if (score >= 75) return 'linear-gradient(135deg,#4B4EDE,#6366F1)';
+  return 'linear-gradient(135deg,#F97316,#EF4444)';
+}
+
+// ─── RENDER: CANDIDATE STRIP ──────────────────────────────────────────────────
+function renderStrip() {
+  const stripScroll = document.querySelector('.strip-scroll');
+  const stripLabel = document.querySelector('.strip-label');
+  if (!stripScroll) return;
+
+  const total = state.batches.length;
+  if (stripLabel) stripLabel.textContent = `Batch · ${total} candidate${total !== 1 ? 's' : ''}`;
+
+  if (total === 0) {
+    stripScroll.innerHTML = '<div style="font-size:12px;color:var(--text-light);padding:4px 0;">No candidates uploaded yet</div>';
+    return;
+  }
+
+  stripScroll.innerHTML = state.candidates.map((c, i) => {
+    const init = initials(c.file);
+    const grad = GRADIENTS[i % GRADIENTS.length];
+    const statusBg = c.score >= 90 ? '#22C55E' : c.score >= 75 ? 'var(--primary)' : '#F97316';
+    return `
+      <div class="strip-item">
+        <div class="strip-avatar" style="background:${grad};">${init}
+          <div class="strip-status" style="background:${statusBg};"></div>
+        </div>
+        <div class="strip-id">#${i+1}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── RENDER: LIVE BATCH STATS ─────────────────────────────────────────────────
+function renderBatchStats() {
+  const statRows = document.querySelectorAll('.stat-row-item');
+  if (!statRows.length) return;
+
+  const total = state.candidates.length || 1;
+  const shortlisted = state.candidates.filter(c => c.decision === 'shortlist').length;
+  const review      = state.candidates.filter(c => c.decision === 'review').length;
+  const hold        = state.candidates.filter(c => c.decision === 'hold').length;
+  const queued      = 0; // all are processed immediately on upload
+
+  const vals = [shortlisted, review, hold, queued];
+  const colors = ['#22C55E', '#4B4EDE', '#F97316', '#EEEEF8'];
+  const textColors = ['#22C55E', '#4B4EDE', '#F97316', 'var(--text-light)'];
+
+  statRows.forEach((row, i) => {
+    const fill = row.querySelector('.mini-fill');
+    const valEl = row.querySelector('.stat-val');
+    if (fill && i < vals.length) {
+      const pct = total > 0 ? Math.round((vals[i] / total) * 100) : 0;
+      fill.style.width = pct + '%';
+      fill.style.background = colors[i];
+    }
+    if (valEl && i < vals.length) {
+      valEl.textContent = vals[i];
+      valEl.style.color = textColors[i];
+    }
+  });
+}
+
+// ─── RENDER: RESULTS PREVIEW (ranked by score DESC) ─────────────────────────
+function renderResultsPreview() {
+  const previewEl = document.querySelector('.results-preview');
+  if (!previewEl) return;
+
+  const headerSpan = previewEl.querySelector('.results-preview-header span');
+  if (headerSpan) headerSpan.textContent = state.candidates.length + ' complete';
+
+  // Remove all existing result-item elements
+  previewEl.querySelectorAll('.result-item').forEach(el => el.remove());
+
+  if (state.candidates.length === 0) {
+    const empty = document.createElement('div');
+    empty.style = 'padding:16px 18px;font-size:12px;color:var(--text-light);';
+    empty.textContent = 'No results yet — upload resumes on the Upload screen';
+    previewEl.appendChild(empty);
+    return;
+  }
+
+  // Sort by score descending, show top 5
+  const sorted = [...state.candidates].sort((a, b) => b.score - a.score).slice(0, 5);
+
+  sorted.forEach((c, i) => {
+    const init = initials(c.file);
+    const grad = scoreGrad(c.score);
+    const barColor = c.score >= 90
+      ? 'linear-gradient(90deg,#22C55E,#16A34A)'
+      : c.score >= 75
+        ? 'linear-gradient(90deg,var(--primary),var(--primary-mid))'
+        : 'linear-gradient(90deg,#F97316,#EF4444)';
+    const numColor = c.score >= 90 ? '#22C55E' : c.score >= 75 ? 'var(--primary)' : '#F97316';
+
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = `
+      <div class="result-avatar" style="background:${grad};">${init}</div>
+      <div class="result-info">
+        <div class="result-id">Candidate #${i + 1} — ${c.role}</div>
+        <div class="result-score-bar"><div class="result-score-fill" style="width:${c.score}%;background:${barColor};"></div></div>
+      </div>
+      <div class="result-score-num" style="color:${numColor};">${c.score}</div>
+    `;
+    previewEl.appendChild(div);
+  });
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll() {
+  renderStrip();
+  renderBatchStats();
+  renderResultsPreview();
+}
+
+// ─── STARTUP ──────────────────────────────────────────────────────────────────
+load().then(() => renderAll());
+
+// ─── ORIGINAL LOG ANIMATION (unchanged) ──────────────────────────────────────
 const logs=[
   '[00:12] Semantic score: 0.87 — PyTorch ✓ TensorFlow ✓',
   '[00:13] Green flag: 3 research publications found',

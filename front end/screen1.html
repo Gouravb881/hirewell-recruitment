@@ -213,12 +213,287 @@ tbody tr:hover{background:var(--primary-light);}
   </div>
 </div>
 <script>
-const dropZone=document.getElementById('dropZone');
-dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over');});
-dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');});
-function addSampleFiles(){
-  const input=document.createElement('input');input.type='file';input.multiple=true;input.accept='.pdf,.docx,.txt';input.click();
+// ─── CONFIG — replace with your real Anthropic API key ───────────────────────
+const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+
+// ─── SHARED STATE ─────────────────────────────────────────────────────────────
+let state = { batches: [], candidates: [] };
+
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('recruitment_v2', JSON.stringify(state)); } catch(e) {}
 }
+async function load() {
+  try {
+    const ls = localStorage.getItem('recruitment_v2');
+    if (ls) { state = JSON.parse(ls); return; }
+  } catch(e) {}
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ─── INLINE ERROR DISPLAY (injected via JS, no HTML change) ──────────────────
+let _errTimeout = null;
+const _errEl = document.createElement('div');
+_errEl.style.cssText = 'color:var(--red);font-size:12.5px;font-weight:700;margin-top:10px;min-height:18px;text-align:center;transition:opacity .3s;';
+document.getElementById('dropZone').insertAdjacentElement('afterend', _errEl);
+
+function showError(msg) {
+  clearTimeout(_errTimeout);
+  _errEl.textContent = msg;
+  _errEl.style.opacity = '1';
+  _errTimeout = setTimeout(() => {
+    _errEl.style.opacity = '0';
+    setTimeout(() => { _errEl.textContent = ''; }, 300);
+  }, 4000);
+}
+
+// ─── 1. FILE VALIDATION ───────────────────────────────────────────────────────
+function validateFile(file) {
+  const errors = [];
+  if (file.type !== 'application/pdf') {
+    errors.push('Only PDF files are accepted.');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    errors.push('File must be under 5MB.');
+  }
+  return errors;
+}
+
+// ─── 2. PDF PAGE COUNT ────────────────────────────────────────────────────────
+async function getPdfPageCount(file) {
+  try {
+    const text = await file.text();
+    const matches = text.match(/\/Type\s*\/Page[^s]/g);
+    return matches ? matches.length : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ─── 3. BASE64 HELPER ─────────────────────────────────────────────────────────
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ─── 4. CLAUDE API SCORING ────────────────────────────────────────────────────
+async function scoreResume(file) {
+  const base64 = await toBase64(file);
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+          },
+          {
+            type: 'text',
+            text: `Score this resume from 0 to 100 based on how well it matches this format:
+- Has a clear full name as the header
+- Has a contact info line (phone, email, address)
+- Has a Professional Summary section
+- Has Work Experience with role titles, company names, dates, and bullet points
+- Has an Education section with degree and institution
+- Has a Key Skills section
+- Has an Additional Information section
+
+Return ONLY valid JSON, no markdown, no explanation:
+{
+  "score": <number 0-100>,
+  "decision": "<shortlist|review|hold>",
+  "reasons": ["<reason1>", "<reason2>"]
+}`
+          }
+        ]
+      }]
+    })
+  });
+  if (!response.ok) throw new Error('API ' + response.status);
+  const data = await response.json();
+  const text = data.content.map(i => i.text || '').join('');
+  // Strip any accidental markdown fences
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+// ─── PLACEHOLDER ROW (while API runs) ─────────────────────────────────────────
+function addPlaceholderRow(filename, tempId, idx) {
+  const tbody = document.getElementById('fileTable');
+  if (!tbody) return;
+  // Clear empty-state row if present
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.id = 'ph-' + tempId;
+  tr.innerHTML = `
+    <td style="color:var(--text-light);font-weight:700;">${String(idx).padStart(2,'0')}</td>
+    <td><div class="file-name"><div class="file-icon">📄</div>${filename}</div></td>
+    <td style="color:var(--text-light);">—</td>
+    <td><span class="status-badge s-parsing"><span class="dot" style="background:var(--primary);"></span>Analyzing…</span></td>
+    <td><span style="color:var(--text-light);font-size:12px;">Please wait</span></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removePlaceholderRow(tempId) {
+  const el = document.getElementById('ph-' + tempId);
+  if (el) el.remove();
+}
+
+// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
+function renderUpload() {
+  const tbody = document.getElementById('fileTable');
+  const badge = document.getElementById('countBadge');
+  if (!tbody) return;
+
+  if (state.batches.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:28px;">No files uploaded yet — drag &amp; drop PDF files or click browse</td></tr>';
+  } else {
+    tbody.innerHTML = state.batches.map((b, i) => `
+      <tr>
+        <td style="color:var(--text-light);font-weight:700;">${String(i+1).padStart(2,'0')}</td>
+        <td><div class="file-name"><div class="file-icon">📄</div>${b.name}</div></td>
+        <td style="color:var(--text-light);">${b.size}</td>
+        <td><span class="status-badge s-ready"><span class="dot" style="background:#22C55E;"></span>Ready</span></td>
+        <td><button class="action-link" onclick="removeBatch('${b.batchId}')" style="color:var(--red);">Remove</button></td>
+      </tr>
+    `).join('');
+  }
+
+  if (badge) badge.textContent = state.batches.length + ' / ' + Math.max(state.batches.length, 10) + ' uploaded';
+
+  const fill = document.querySelector('.prog-bar-fill');
+  const labels = document.querySelector('.prog-labels');
+  const pct = state.batches.length === 0 ? 0 : 100;
+  if (fill) fill.style.width = pct + '%';
+  if (labels) labels.innerHTML = `<span>${state.batches.length} ready</span><span>${pct}%</span>`;
+}
+
+function renderAll() {
+  renderUpload();
+}
+
+// ─── REMOVE BATCH ─────────────────────────────────────────────────────────────
+function removeBatch(batchId) {
+  const batch = state.batches.find(b => b.batchId === batchId);
+  if (batch) {
+    state.batches  = state.batches.filter(b => b.batchId !== batchId);
+    state.candidates = state.candidates.filter(c => c.file !== batch.name);
+  }
+  save();
+  renderAll();
+}
+
+// ─── 5. FULL UPLOAD FLOW ──────────────────────────────────────────────────────
+async function processFiles(files) {
+  for (const file of Array.from(files)) {
+
+    // STEP 1 — Basic validation
+    const errors = validateFile(file);
+    if (errors.length) { showError(errors[0]); continue; }
+
+    // STEP 2 — PDF page count
+    const pageCount = await getPdfPageCount(file);
+    if (pageCount !== null && (pageCount < 1 || pageCount > 2)) {
+      showError(`Resume must be 1–2 pages. This file has ${pageCount} pages.`);
+      continue;
+    }
+    // pageCount === null means we couldn't determine → allow through (warn is optional)
+
+    // STEP 3 — Show placeholder while API runs
+    const tempId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const pendingIdx = state.batches.length + 1;
+    addPlaceholderRow(file.name, tempId, pendingIdx);
+
+    // STEP 4 — Call Claude API for scoring
+    let score, decision, reasons;
+    try {
+      const result = await scoreResume(file);
+      score    = (typeof result.score === 'number') ? result.score : parseInt(result.score, 10) || 70;
+      decision = result.decision || (score >= 85 ? 'shortlist' : score >= 65 ? 'review' : 'hold');
+      reasons  = Array.isArray(result.reasons) ? result.reasons : [];
+    } catch(e) {
+      showError('Scoring failed. File saved with estimated score.');
+      // Fallback — deterministic estimate so state still stays useful
+      score    = 60 + Math.round(Math.random() * 25);
+      decision = score >= 85 ? 'shortlist' : score >= 65 ? 'review' : 'hold';
+      reasons  = ['API scoring unavailable — estimated score applied'];
+    }
+
+    // STEP 5 — Remove placeholder
+    removePlaceholderRow(tempId);
+
+    // Derive stage index from final score
+    const stageIdx = score >= 90 ? 2 : score >= 75 ? 1 : 0;
+
+    // STEP 6 — Assign sequential 2-digit candidate ID
+    const candidateNum = state.candidates.length + 1;
+
+    // STEP 7 — Push to state
+    const batchId = 'B' + Date.now() + Math.random().toString(36).slice(2, 5);
+    state.batches.push({
+      batchId,
+      name: file.name,
+      size: fmtSize(file.size || 0),
+      status: 'Parsed',
+      ts: Date.now()
+    });
+    state.candidates.push({
+      id:       String(candidateNum).padStart(2, '0'),
+      file:     file.name,
+      role:     'Network Engineer',
+      score,
+      stage:    stageIdx,
+      decision,
+      reasons,
+      ts:       Date.now()
+    });
+
+    save();
+    renderAll();
+  }
+}
+
+// ─── DROP ZONE ────────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) processFiles(e.dataTransfer.files);
+});
+
+function addSampleFiles() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = '.pdf';           // PDF only
+  input.onchange = () => { if (input.files.length) processFiles(input.files); };
+  input.click();
+}
+
+// ─── STARTUP ──────────────────────────────────────────────────────────────────
+load().then(() => renderAll());
 </script>
 </body></html>

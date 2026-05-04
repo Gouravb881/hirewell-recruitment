@@ -65,10 +65,13 @@ const SettingsScreen = () => {
   useEffect(() => {
     const data = MockDB.get();
     if (data.user) setUser(data.user);
+    if (data.anonymization) setAnonymization(data.anonymization);
+    if (data.weights) setWeights(data.weights);
   }, []);
 
   const handleSave = () => {
     MockDB.updateUser(user);
+    MockDB.updateSettings({ anonymization, weights });
     alert('Settings saved successfully!');
   };
 

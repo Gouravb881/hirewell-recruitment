@@ -3,21 +3,133 @@ const DB_KEY = 'hirewell_mock_db';
 const defaultData = () => ({
   user: { name: 'Sara Abraham', role: 'Senior Recruiter', email: 'sara.a@hirewell.ai', initials: 'SA' },
   theme: 'light',
-  jd: null,
-  candidates: [],
-  results: [],
+  anonymization: {
+    name: true, institution: true, gradYear: true, gender: true, location: true, links: true, photo: true
+  },
+  weights: {
+    technical: 40, communication: 20, experience: 15, alignment: 10, trajectory: 10, culture: 5
+  },
+  activeJob: {
+    id: 1,
+    title: 'Senior UX Designer',
+    department: 'Design',
+    location: 'Remote',
+    type: 'Full-time',
+    status: 'Active',
+    applicants: 124,
+    description: `We are seeking a Senior UX Designer to lead the design of our product ecosystem. You will conduct user research, create wireframes and prototypes, build scalable design systems in Figma, and collaborate with product managers and engineers to deliver accessible, user-centered experiences.
+
+Responsibilities:
+- Lead end-to-end UX design processes
+- Conduct user research and usability testing
+- Build and maintain design systems in Figma
+- Collaborate with cross-functional teams
+- Ensure designs meet WCAG accessibility standards
+
+Requirements:
+- 5+ years of UX/Product Design experience
+- Strong portfolio of digital product design work
+- Expertise in Figma, user research, and prototyping
+- Knowledge of React and front-end collaboration
+- Understanding of accessibility and UX best practices`,
+    postedDate: '2024-03-01'
+  },
+  candidates: [
+    {
+      id: 'A1',
+      name: 'Alex Rivers',
+      email: 'alex.rivers@email.com',
+      role: 'Senior UX Designer',
+      status: 'Shortlist',
+      stage: 'Screened',
+      score: 94,
+      file_name: 'Alex_Rivers_Senior_UX.pdf',
+      applied_date: '2024-03-02',
+      match_details: {
+        skills: ['Figma', 'Prototyping', 'Accessibility', 'UX Research', 'Design Systems'],
+        experience: '8 Years',
+        missing: []
+      }
+    },
+    {
+      id: 'A2',
+      name: 'Jordan Lee',
+      email: 'jordan.lee@email.com',
+      role: 'Senior UX Designer',
+      status: 'Review',
+      stage: 'Screened',
+      score: 72,
+      file_name: 'Jordan_Lee_Designer.pdf',
+      applied_date: '2024-03-03',
+      match_details: {
+        skills: ['Figma', 'UI Design', 'Photoshop'],
+        experience: '3 Years',
+        missing: ['Accessibility', 'UX Research Metrics']
+      }
+    },
+    {
+      id: 'A3',
+      name: 'Pat Smith',
+      email: 'pat.smith@email.com',
+      role: 'Senior UX Designer',
+      status: 'Rejected',
+      stage: 'Rejected',
+      score: 38,
+      file_name: 'Pat_Smith_Print_Manager.pdf',
+      applied_date: '2024-03-04',
+      match_details: {
+        skills: ['Printing', 'Customer Service', 'Excel'],
+        experience: '9 Years (Print)',
+        missing: ['UX Design', 'Figma', 'Prototyping']
+      }
+    }
+  ],
+  results: [
+    { candidate_id: 'A1', final_score: 94, decision: 'Shortlist', confidence_score: 98, confidence_label: 'High', explainability: { missing: [] } },
+    { candidate_id: 'A2', final_score: 72, decision: 'Review', confidence_score: 88, confidence_label: 'Medium', explainability: { missing: ['Accessibility Standards', 'UX Research Metrics'] } },
+    { candidate_id: 'A3', final_score: 38, decision: 'Reject', confidence_score: 95, confidence_label: 'High', explainability: { missing: ['Figma', 'Product Strategy', 'UX/Product Design Experience', 'Digital Product Portfolio'] } }
+  ],
   appointments: [
-    { id: 1, date: 24, time: '10:00 AM', title: 'Technical Round 1', candidateId: 'A3', type: 'Video Call', duration: '45m' },
-    { id: 2, date: 24, time: '11:30 AM', title: 'System Design Review', candidateId: 'A2', type: 'Video Call', duration: '60m' },
-    { id: 3, date: 24, time: '02:00 PM', title: 'Culture Fit Chat', candidateId: 'A1', type: 'Video Call', duration: '30m' },
-    { id: 4, date: 25, time: '10:00 AM', title: 'Final Debrief', candidateId: 'Internal Team', type: 'Meeting', duration: '30m' },
+    { id: 1, date: 24, time: '10:00 AM', title: 'Technical Interview', candidateId: 'A1', type: 'Video Call', duration: '60m' },
+    { id: 2, date: 24, time: '11:30 AM', title: 'Portfolio Review', candidateId: 'A2', type: 'Video Call', duration: '45m' },
   ]
 });
 
 export const MockDB = {
   get: () => {
     const data = localStorage.getItem(DB_KEY);
-    return data ? JSON.parse(data) : defaultData();
+    const parsed = data ? JSON.parse(data) : defaultData();
+    
+    // FORCE SYNC demo results to screeningResults cache only if names match
+    const savedResults = localStorage.getItem("screeningResults");
+    let currentMatches = savedResults ? JSON.parse(savedResults) : [];
+    
+    const demoResults = [
+      { id: 'A1', name: 'Alex Rivers', score: 94, decision: 'Shortlist' },
+      { id: 'A2', name: 'Jordan Lee', score: 72, decision: 'Review' },
+      { id: 'A3', name: 'Pat Smith', score: 38, decision: 'Reject' }
+    ];
+
+    demoResults.forEach(demo => {
+      const actualCand = (parsed.candidates || []).find(c => String(c.id) === String(demo.id));
+      // Only force the score if the name also matches the demo candidate
+      if (actualCand && actualCand.name?.toLowerCase().includes(demo.name.toLowerCase())) {
+        const idx = currentMatches.findIndex(m => String(m.candidate_id) === String(demo.id));
+        const resultObj = {
+          candidate_id: demo.id,
+          final_score: demo.score,
+          decision: demo.decision,
+          confidence_score: 95,
+          explainability: { missing: demo.score < 50 ? ['Domain Alignment'] : [] }
+        };
+        if (idx !== -1) currentMatches[idx] = resultObj;
+        else currentMatches.push(resultObj);
+      }
+    });
+
+    localStorage.setItem("screeningResults", JSON.stringify(currentMatches));
+    
+    return parsed;
   },
 
   save: (data) => {
@@ -52,7 +164,7 @@ export const MockDB = {
     MockDB.save(data);
   },
 
-  addCandidate: (file) => {
+  addCandidate: (file, extractedText = '') => {
     // Read file as base64 string for later parsing
     const reader = new FileReader();
     const data = MockDB.get();
@@ -80,6 +192,7 @@ export const MockDB = {
       onboardingStatus: 'Not Started',
       interviewScore: null,
       contentBase64: '',
+      resumeText: extractedText,
       isMedia: file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')
     };
     return new Promise((resolve) => {
@@ -175,6 +288,54 @@ export const MockDB = {
     MockDB.save(data);
   },
 
+  updateCandidateStatus: (id, status) => {
+    const data = MockDB.get();
+    const cand = data.candidates.find(c => c.id === id);
+    if (cand) {
+      cand.status = status;
+      // Map status to stage for consistency
+      if (status === 'Shortlist') cand.stage = 'Screened';
+      else if (status === 'Interviewed') cand.stage = 'Interviewed';
+      else if (status === 'Rejected') cand.stage = 'Rejected';
+      else if (status === 'Hold') cand.stage = 'On Hold';
+      
+      // Also update screeningResults cache if it exists
+      const savedResults = localStorage.getItem("screeningResults");
+      if (savedResults) {
+        const results = JSON.parse(savedResults);
+        const matchIdx = results.findIndex(m => String(m.candidate_id) === String(id));
+        if (matchIdx !== -1) {
+          results[matchIdx].decision = status;
+          localStorage.setItem("screeningResults", JSON.stringify(results));
+        }
+      }
+    }
+    MockDB.save(data);
+  },
+
+  deleteCandidate: (id) => {
+    console.log(`Attempting to delete candidate with ID: ${id}`);
+    const data = MockDB.get();
+    const initialCount = data.candidates.length;
+    data.candidates = data.candidates.filter(c => String(c.id) !== String(id));
+    
+    if (data.candidates.length === initialCount) {
+      console.warn(`No candidate found with ID ${id} to delete.`);
+    } else {
+      console.log(`Successfully deleted candidate ${id}. New count: ${data.candidates.length}`);
+    }
+    
+    // Also clean up from screeningResults
+    const savedResults = localStorage.getItem("screeningResults");
+    if (savedResults) {
+      const results = JSON.parse(savedResults);
+      const filteredResults = results.filter(m => String(m.candidate_id) !== String(id));
+      localStorage.setItem("screeningResults", JSON.stringify(filteredResults));
+    }
+    
+    MockDB.save(data);
+  },
+
   rejectCandidate: (id) => {
     const data = MockDB.get();
     const cand = data.candidates.find(c => c.id === id);
@@ -241,6 +402,13 @@ export const MockDB = {
     if (user.name) {
       data.user.initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     }
+    MockDB.save(data);
+  },
+
+  updateSettings: (settings) => {
+    const data = MockDB.get();
+    if (settings.anonymization) data.anonymization = settings.anonymization;
+    if (settings.weights) data.weights = settings.weights;
     MockDB.save(data);
   },
 

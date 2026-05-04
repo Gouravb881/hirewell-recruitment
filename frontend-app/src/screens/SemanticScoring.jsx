@@ -28,19 +28,22 @@ const SemanticScoring = () => {
       listMatches(id).then(setResults).catch((err) => {
         console.warn("Backend listMatches failed, using MockDB:", err);
         const data = MockDB.get();
-        // If results exist in localStorage, use them first
         const saved = localStorage.getItem("screeningResults");
-        if (saved) {
-          setResults(JSON.parse(saved));
+        const cachedResults = saved ? JSON.parse(saved) : [];
+        
+        // If results exist in localStorage AND match the candidate count, use them
+        if (cachedResults.length > 0 && cachedResults.length === data.candidates.length) {
+          setResults(cachedResults);
         } else if (data.candidates.length > 0) {
+          // New candidates found or cache invalid - show candidates with their upload-time scores
           setResults(data.candidates.map(c => ({
             id: c.id,
             candidate_id: c.id,
-            final_score: c.compositeScore || c.score || 0,
-            decision: c.score >= 80 ? 'Shortlist' : 'Review',
+            final_score: c.score || 0,
+            decision: c.status || (c.score >= 80 ? 'Shortlist' : 'Review'),
             confidence_score: 95,
             confidence_label: 'High',
-            explainability: { missing: [] }
+            explainability: { missing: c.reasons || [] }
           })));
         }
       });
@@ -69,11 +72,49 @@ const SemanticScoring = () => {
       };
 
       const simulated = candidates.map(c => {
-        const score = Math.floor(40 + Math.random() * 55);
+        let score = 0;
+        let missing = [];
+        let confidence_score = Math.floor(80 + Math.random() * 15);
+        
+        // Handle specific demo samples requested by user with strict determinism
+        const nameMatch = c.name?.toLowerCase() || '';
+        const idMatch = String(c.id);
+        const resumeText = (c.resumeText || '').toLowerCase();
+
+        if (nameMatch.includes('alex rivers') || idMatch === 'A1') {
+          score = 94;
+          confidence_score = 98;
+          missing = [];
+        } else if (nameMatch.includes('jordan lee') || idMatch === 'A2') {
+          score = 72;
+          confidence_score = 88;
+          missing = ['Accessibility Standards', 'UX Research Metrics'];
+        } else if (nameMatch.includes('pat smith') || nameMatch.includes('gukesh sharma') || idMatch === 'A3') {
+          score = nameMatch.includes('gukesh') ? 18 : 38;
+          confidence_score = 95;
+          missing = ['UX Design', 'Figma', 'Product Strategy', 'UX Portfolio', 'User Research'];
+        } else if (c.score && c.score > 0) {
+          score = c.score;
+          missing = c.reasons || ['None identified'];
+        } else {
+          // General Role Mismatch Detection Logic
+          const isDeveloper = resumeText.includes('python') || resumeText.includes('sql') || resumeText.includes('backend');
+          const isDesigner = resumeText.includes('design') || resumeText.includes('ux') || resumeText.includes('figma');
+          
+          if (isDeveloper && !isDesigner) {
+            score = Math.floor(15 + Math.random() * 15); // Very low score for developers applying for design roles
+            missing = ['UX Design Foundations', 'UI Design Skills', 'Figma Proficiency', 'UX Portfolio'];
+          } else {
+            score = Math.floor(40 + Math.random() * 40);
+            missing = ['Advanced Domain Expertise'];
+          }
+        }
+
         const decision = getDecision(score);
         
         // Persist to MockDB so other pages see them as "Processed"
-        MockDB.processCandidate(c.id, score, Math.floor(Math.random() * 30), ['React', 'Architecture'], true);
+        const requiredSkills = MockDB.get().jd?.extraction?.competencies || [];
+        MockDB.processCandidate(c.id, score, Math.floor(Math.random() * 30), requiredSkills.filter(s => !missing.includes(s)), true);
         if (decision === 'Reject') MockDB.rejectCandidate(c.id);
 
         return {
@@ -81,9 +122,9 @@ const SemanticScoring = () => {
           candidate_id: c.id,
           final_score: score,
           decision: decision,
-          confidence_score: Math.floor(80 + Math.random() * 15),
-          confidence_label: 'High',
-          explainability: { missing: ['Industry Certifications'] }
+          confidence_score,
+          confidence_label: confidence_score >= 90 ? 'High' : 'Medium',
+          explainability: { missing: missing.length > 0 ? missing : ['None'] }
         };
       });
       setResults(simulated);

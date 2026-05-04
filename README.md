@@ -11,6 +11,7 @@ Hire well/
 ├── frontend-app/        # React + Vite + Tailwind CSS (UI/UX Layer)
 ├── backend/             # FastAPI + SQLAlchemy (Compute & API Layer)
 ├── README.md            # Unified Project Documentation
+├── HACKATHON_VIVA.md    # 🏆 Specialized Hackathon/Viva Guide (Q&A)
 └── .gitignore           # Global exclusion rules
 ```
 

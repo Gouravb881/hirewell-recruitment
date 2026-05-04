@@ -72,11 +72,11 @@ const ShortlistDashboard = () => {
       // but usually we want to show matched results
       if (!match && filter !== 'All') return false;
 
-      const decision = match?.decision?.toLowerCase() || 'review';
+      const decision = match?.decision?.toLowerCase() || (c.score >= 80 ? 'shortlist' : 'review');
       const matchesFilter = filter === 'All' || 
         (filter === 'Strongly Recommend' && decision === 'shortlist') || 
         (filter === 'Recommend' && decision === 'review') || 
-        (filter === 'Hold' && decision === 'reject');
+        (filter === 'Hold' && (decision === 'hold' || decision === 'rejected' || decision === 'reject'));
 
       const matchesSearch = String(c.id).toLowerCase().includes(searchQuery.toLowerCase()) || 
         (c.file_name && c.file_name.toLowerCase().includes(searchQuery.toLowerCase())) ||

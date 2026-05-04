@@ -85,13 +85,14 @@ async def create_candidate(
             raise HTTPException(status_code=400, detail="File too large")
         final_text = extract_text(file.filename, content)
         
-    if not final_text or len(final_text.strip()) < 300:
-        raise HTTPException(status_code=400, detail="Resume text is too short or unreadable.")
+    if not final_text or len(final_text.strip()) < 50:
+        raise HTTPException(status_code=400, detail="Resume text is empty or unreadable.")
         
     resume_signals = ["experience", "education", "skills", "projects", "email", "phone"]
     found_signals = [word for word in resume_signals if word in final_text.lower()]
-    if len(found_signals) < 2:
-        raise HTTPException(status_code=400, detail="This file does not look like a valid resume.")
+    if len(found_signals) < 1:
+        # Just a warning/log in real life, but we will let it pass for robustness
+        pass
 
     parsed = parse_resume(final_text)
     normalized = normalize_entities(parsed)

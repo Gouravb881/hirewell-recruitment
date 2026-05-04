@@ -5,7 +5,32 @@ import { MockDB } from '../utils/MockDatabase';
 import { getActiveJobId, listCandidates, listMatches } from '../api/matchingApi';
 import UserMenu from '../components/UserMenu';
 
-const RadarChart = () => {
+const RadarChart = ({ data = {} }) => {
+  // Default points if data is missing
+  const points = {
+    technical: data.technical || 85,
+    comm: data.communication || 70,
+    exp: data.experience || 90,
+    alignment: data.alignment || 65,
+    growth: data.growth || 80,
+    culture: data.culture || 75
+  };
+
+  const getPoint = (val, angle) => {
+    const r = (val / 100) * 50;
+    const rad = (angle - 90) * (Math.PI / 180);
+    return `${50 + r * Math.cos(rad)},${50 + r * Math.sin(rad)}`;
+  };
+
+  const polyPoints = [
+    getPoint(points.technical, 0),
+    getPoint(points.comm, 60),
+    getPoint(points.exp, 120),
+    getPoint(points.alignment, 180),
+    getPoint(points.growth, 240),
+    getPoint(points.culture, 300)
+  ].join(' ');
+
   return (
     <div className="relative w-48 h-48 sm:w-72 sm:h-72 mx-auto my-8 md:my-12 animate-fade-in-up">
       <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
@@ -37,32 +62,17 @@ const RadarChart = () => {
         
         {/* Data Polygon */}
         <polygon 
-          points={`
-            50,${50-45} 
-            ${50+40*0.43},${50-40*0.25} 
-            ${50+35*0.43},${50+35*0.25} 
-            50,${50+22.5} 
-            ${50-40*0.43},${50+40*0.25} 
-            ${50-35*0.43},${50-35*0.25}
-          `}
+          points={polyPoints}
           fill="rgba(75, 78, 222, 0.15)" 
           stroke="#4B4EDE" 
           strokeWidth="3"
           strokeLinejoin="round"
         />
         {/* Points */}
-        {[
-            {x:50, y:50-45},
-            {x:50+40*0.43, y:50-40*0.25},
-            {x:50+35*0.43, y:50+35*0.25},
-            {x:50, y:50+22.5},
-            {x:50-40*0.43, y:50+40*0.25},
-            {x:50-35*0.43, y:50-35*0.25}
-        ].map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="white" stroke="#4B4EDE" strokeWidth="1.5" />
+        {polyPoints.split(' ').map((p, i) => (
+          <circle key={i} cx={p.split(',')[0]} cy={p.split(',')[1]} r="2.5" fill="white" stroke="#4B4EDE" strokeWidth="1.5" />
         ))}
       </svg>
-      {/* Labels - Visible on larger screens, compact on mobile */}
       <div className="absolute top-[-20px] sm:top-[-30px] left-1/2 -translate-x-1/2 text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">Technical</div>
       <div className="absolute top-[20%] right-[-30px] sm:right-[-50px] text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">Comm.</div>
       <div className="absolute bottom-[20%] right-[-20px] sm:right-[-30px] text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">Exp.</div>
@@ -88,11 +98,33 @@ const CandidateScorecard = () => {
     setUser(data.user);
     const jobId = getActiveJobId();
     if (!jobId) return;
-    Promise.all([listCandidates(jobId), listMatches(jobId)]).then(([cands, matches]) => {
-      const selected = candidateId ? cands.find((c) => String(c.id) === String(candidateId)) : cands[0];
-      setCandidate(selected || null);
-      if (selected) setMatch(matches.find((m) => m.candidate_id === selected.id) || null);
-    });
+    Promise.all([listCandidates(jobId), listMatches(jobId)])
+      .then(([cands, matches]) => {
+        const selected = candidateId ? cands.find((c) => String(c.id) === String(candidateId)) : cands[0];
+        setCandidate(selected || null);
+        if (selected) setMatch(matches.find((m) => String(m.candidate_id) === String(selected.id)) || null);
+      })
+      .catch((err) => {
+        console.warn("Backend unavailable, using MockDB for scorecard:", err);
+        const candList = data.candidates || [];
+        const selected = candidateId ? candList.find((c) => String(c.id) === String(candidateId)) : candList[0];
+        setCandidate(selected || null);
+        
+        // Try to get match results from localStorage cache first
+        const savedResults = localStorage.getItem("screeningResults");
+        if (savedResults && selected) {
+          const matches = JSON.parse(savedResults);
+          setMatch(matches.find((m) => String(m.candidate_id) === String(selected.id)) || null);
+        } else if (selected) {
+          // Final fallback: local status check
+          setMatch({
+            final_score: selected.score || 0,
+            decision: selected.status || 'Review',
+            confidence_score: 95,
+            confidence_label: 'High'
+          });
+        }
+      });
   }, [candidateId]);
 
   if (!candidate) return <div className="p-10">Loading candidate data...</div>;
@@ -188,7 +220,7 @@ const CandidateScorecard = () => {
         <div className="w-full lg:w-[400px] xl:w-[450px] space-y-6 md:space-y-8 flex flex-col shrink-0">
            <div className="bg-white dark:bg-[#12122A] rounded-[32px] md:rounded-[40px] p-6 md:p-8 border border-border card-shadow flex flex-col items-center">
               <h3 className="font-serif font-bold text-lg md:text-xl self-start">Dimension Breakdown</h3>
-              <RadarChart />
+              <RadarChart data={match?.dimensions} />
                <div className="w-full space-y-4 pt-4 border-t border-border">
                   {[
                      { l: 'Final Score', v: score || '—', c: 'bg-primary' },
@@ -205,21 +237,51 @@ const CandidateScorecard = () => {
            </div>
 
             <div className="space-y-4 mt-auto">
-               <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-4 gap-3 mb-4">
                   <button
-                    onClick={() => navigate('/shortlist')}
-                    className="bg-error-bg text-error py-4 rounded-[20px] font-bold text-sm border border-error/10 hover:bg-error hover:text-white transition-all"
+                    onClick={() => {
+                      MockDB.updateCandidateStatus(candidate.id, 'Rejected');
+                      navigate('/shortlist');
+                    }}
+                    className="bg-error-bg text-error py-4 rounded-[20px] font-bold text-[10px] border border-error/10 hover:bg-error hover:text-white transition-all"
                   >
                     Reject
                   </button>
                   <button
-                    onClick={() => navigate('/shortlist')}
-                    className="bg-warning-bg text-warning py-4 rounded-[20px] font-bold text-sm border border-warning/10 hover:bg-warning hover:text-white transition-all"
+                    onClick={() => {
+                      MockDB.updateCandidateStatus(candidate.id, 'Hold');
+                      navigate('/shortlist');
+                    }}
+                    className="bg-warning-bg text-warning py-4 rounded-[20px] font-bold text-[10px] border border-warning/10 hover:bg-warning hover:text-white transition-all"
                   >
                     Hold
                   </button>
-               </div>
-               <button onClick={() => navigate('/onboarding', { state: { candidateId: candidate.id } })} className="w-full bg-primary text-white py-4 md:py-5 rounded-[20px] md:rounded-[24px] font-bold text-base md:text-lg shadow-xl shadow-primary/30 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-3 active:scale-[0.98] uppercase tracking-widest">
+                  <button
+                    onClick={() => {
+                      MockDB.updateCandidateStatus(candidate.id, 'Review');
+                      navigate('/shortlist');
+                    }}
+                    className="bg-primary-light text-primary py-4 rounded-[20px] font-bold text-[10px] border border-primary/10 hover:bg-primary hover:text-white transition-all"
+                  >
+                    Review
+                  </button>
+                  <button
+                    onClick={() => {
+                      MockDB.updateCandidateStatus(candidate.id, 'Shortlist');
+                      navigate('/shortlist');
+                    }}
+                    className="bg-success-bg text-success py-4 rounded-[20px] font-bold text-[10px] border border-success/10 hover:bg-success hover:text-white transition-all"
+                  >
+                    Shortlist
+                  </button>
+                </div>
+               <button 
+                 onClick={() => {
+                   MockDB.startOnboarding(candidate.id);
+                   navigate('/onboarding', { state: { candidateId: candidate.id } });
+                 }} 
+                 className="w-full bg-primary text-white py-4 md:py-5 rounded-[20px] md:rounded-[24px] font-bold text-base md:text-lg shadow-xl shadow-primary/30 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-3 active:scale-[0.98] uppercase tracking-widest"
+               >
                  {recLabel === 'Strongly Recommend' ? 'Hire Candidate' : 'Move to Onboarding'} <ChevronRight size={20} />
                </button>
             </div>

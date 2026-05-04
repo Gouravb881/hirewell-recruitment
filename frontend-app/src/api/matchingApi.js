@@ -5,12 +5,17 @@ export const getActiveJobId = () => Number(localStorage.getItem(JOB_ID_KEY) || 0
 export const setActiveJobId = (id) => localStorage.setItem(JOB_ID_KEY, String(id));
 
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, options);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, options);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Request failed: ${res.status}`);
+    }
+    return res.json();
+  } catch (err) {
+    // Re-throw so callers can catch it, but now it's a caught error
+    throw err;
   }
-  return res.json();
 }
 
 export async function createJob(payload) {

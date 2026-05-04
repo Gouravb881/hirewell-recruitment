@@ -156,12 +156,12 @@ const Onboarding = () => {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                       <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-primary-light dark:bg-white/5 flex items-center justify-center text-primary font-black text-lg md:text-xl shrink-0">
-                        {activeCand.id}
+                        {activeCand?.id || '--'}
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-lg md:text-xl font-serif font-bold truncate">{activeCand.name}</h2>
+                        <h2 className="text-lg md:text-xl font-serif font-bold truncate">{activeCand?.name || 'Unknown Candidate'}</h2>
                         <p className="text-[9px] md:text-[10px] text-text-muted font-bold uppercase tracking-widest truncate">
-                          {jd?.level || 'Senior'} {jd?.title || 'Engineer'} · Score: {activeCand.compositeScore || activeCand.score}
+                          {jd?.level || 'Senior'} {jd?.title || 'Engineer'} · Score: {activeCand?.compositeScore || activeCand?.score || '--'}
                         </p>
                       </div>
                     </div>

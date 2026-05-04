@@ -29,10 +29,28 @@ const InterviewRoom = () => {
   const candidateId = location.state?.candidateId;
   
   const db = MockDB.get();
-  const candidate = candidateId ? (db.candidates.find(c => c.id === candidateId) || db.candidates?.[0]) : db.candidates?.[0];
+  const candidatesList = db.candidates || [];
+  const candidate = candidateId 
+    ? (candidatesList.find(c => String(c.id) === String(candidateId)) || candidatesList[0]) 
+    : candidatesList[0];
+    
   const jd = db.jd || { title: 'Senior Engineer', level: 'Senior' };
 
   const [timer, setTimer] = useState(0);
+  // ... other states
+  
+  if (!candidate) {
+    return (
+      <div className="h-screen flex items-center justify-center p-8 text-center">
+        <div className="bg-white dark:bg-[#12122A] p-10 rounded-[32px] border border-border card-shadow max-w-md">
+          <ShieldAlert className="text-error mx-auto mb-6" size={48} />
+          <h2 className="text-2xl font-serif font-bold mb-4">No Candidate Selected</h2>
+          <p className="text-text-muted text-sm mb-8">Please select a candidate from the dashboard or queue to start an interview.</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full bg-primary text-white py-4 rounded-2xl font-bold">Go to Dashboard</button>
+        </div>
+      </div>
+    );
+  }
   const [currentQ, setCurrentQ] = useState(0);
   const [inputMode, setInputMode] = useState('voice'); // 'voice' | 'text'
   const [isRecording, setIsRecording] = useState(false);
