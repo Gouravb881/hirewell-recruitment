@@ -66,4 +66,13 @@ Every candidate score is backed by a dimension breakdown (Technical, Growth, Cul
 *   **Intelligence**: Semantic Vector Matching, Regex-based Parsing, Composite Scoring Algorithms.
 
 ---
+---
 *Empowering recruiters to find the 1% through data-driven intelligence.*
+
+## 🌟 Latest Production Updates (May 4, 2026)
+*   **Role-Specific AI Scoring**: Specialized analysis for **Senior UX Designer** positions (Figma, WCAG, UX Research).
+*   **Domain Alignment Engine**: Intelligent detection of role mismatches (e.g., rejecting Python devs for Design roles).
+*   **Premium UI**: High-fidelity "AI Intelligence Scan" loading states and "profesnol" error handling.
+*   **Deterministic Demo**: Guaranteed outcomes for sample candidates (Alex Rivers, Jordan Lee, Pat Smith).
+
+*Last Updated: May 4, 2026 | 18:00 IST*
