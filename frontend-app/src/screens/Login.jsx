@@ -20,22 +20,22 @@ const Login = ({ onLogin }) => {
       <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] bg-primary/5 rounded-full blur-[120px]"></div>
       <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[60%] bg-primary/5 rounded-full blur-[120px]"></div>
       
-      <div className="w-full max-w-[1100px] bg-white rounded-[48px] shadow-2xl shadow-primary/10 flex overflow-hidden border border-border relative z-10 animate-fade-in-up">
+      <div className="w-full max-w-[1100px] bg-white rounded-[32px] md:rounded-[48px] shadow-2xl shadow-primary/10 flex flex-col md:flex-row overflow-hidden border border-border relative z-10 animate-fade-in-up">
         {/* Left Side - Branding */}
-        <div className="w-1/2 bg-primary p-16 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="w-full md:w-1/2 bg-primary p-10 md:p-16 text-white flex flex-col justify-between relative overflow-hidden">
            <div className="absolute inset-0 opacity-10">
               <div className="grid-bg w-full h-full"></div>
            </div>
            
-           <div className="relative z-10">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-black font-serif text-2xl mb-8 shadow-xl">H</div>
-              <h1 className="text-5xl font-serif font-bold mb-6 leading-tight">Hire merit,<br/>not metrics.</h1>
-              <p className="text-primary-light/80 text-lg leading-relaxed max-w-md">
-                 The world's first bias-shielded recruitment platform. Screen candidates purely on potential and performance.
+           <div className="relative z-10 text-center md:text-left">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-black font-serif text-2xl mb-6 md:mb-8 shadow-xl mx-auto md:mx-0">H</div>
+              <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4 md:mb-6 leading-tight">Hire merit,<br className="hidden md:block"/>not metrics.</h1>
+              <p className="text-primary-light/80 text-sm md:text-lg leading-relaxed max-w-md mx-auto md:mx-0 hidden sm:block">
+                 The world's first bias-shielded recruitment platform. Screen candidates purely on potential.
               </p>
            </div>
 
-           <div className="relative z-10 space-y-6">
+           <div className="relative z-10 space-y-6 hidden md:block">
               <div className="flex gap-4 items-center">
                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md"><Shield size={20} /></div>
                  <div>
@@ -51,10 +51,10 @@ const Login = ({ onLogin }) => {
         </div>
 
         {/* Right Side - Form */}
-        <div className="w-1/2 p-16 flex flex-col justify-center bg-white">
+        <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white">
            <div className="max-w-sm mx-auto w-full">
-              <h2 className="text-3xl font-serif font-bold text-text mb-2">Welcome Back</h2>
-              <p className="text-text-muted text-sm mb-10 font-medium">Please enter your credentials to continue</p>
+              <h2 className="text-2xl md:text-3xl font-serif font-bold text-text mb-2">Welcome Back</h2>
+              <p className="text-text-muted text-xs md:text-sm mb-8 md:mb-10 font-medium">Please enter your credentials to continue</p>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                  <div className="space-y-2">
