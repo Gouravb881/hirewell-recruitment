@@ -120,23 +120,23 @@ const Dashboard = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1 space-y-10 overflow-hidden">
           {/* Welcome Card */}
-          <div className="bg-primary rounded-[32px] p-6 md:p-10 text-white relative overflow-hidden shadow-xl shadow-primary/10">
-            <div className="relative z-10 max-w-lg text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4">Good Morning, {db.user?.name?.split(' ')[0] || 'Sara'} 👋</h1>
-              <div className="text-primary-light opacity-90 leading-relaxed mb-8 text-sm md:text-base">
+          <div className="bg-primary rounded-[24px] md:rounded-[32px] p-6 md:p-10 text-white relative overflow-hidden shadow-xl shadow-primary/10">
+            <div className="relative z-10 text-center md:text-left">
+              <h1 className="text-2xl md:text-4xl font-serif font-bold mb-3 md:mb-4">Good Morning, {db.user?.name?.split(' ')[0] || 'Sara'} 👋</h1>
+              <div className="text-primary-light opacity-90 leading-relaxed mb-6 md:mb-8 text-xs md:text-base px-2 md:px-0">
                 You have <span className="font-bold underline">12 new applications</span> awaiting AI screening.<br className="hidden md:block"/>
                 HireWell is ready to analyze — bias-blind.
               </div>
               <button 
                 onClick={() => navigate('/recruitment')}
-                className="w-full md:w-auto bg-white text-primary px-8 py-3.5 rounded-xl font-bold text-sm transition-transform hover:scale-105 active:scale-95"
+                className="w-full md:w-auto bg-white text-primary px-8 py-3.5 rounded-xl font-bold text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg"
               >
                 Start Screening →
               </button>
             </div>
-            <div className="absolute right-0 bottom-0 top-0 w-32 md:w-64 flex items-center justify-center opacity-10 md:opacity-100 pointer-events-none">
-              <div className="w-32 h-32 md:w-48 md:h-48 bg-primary-light/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
-                <div className="text-5xl md:text-8xl">🤖</div>
+            <div className="absolute right-[-20px] bottom-[-20px] md:right-0 md:bottom-0 md:top-0 w-24 md:w-64 flex items-center justify-center opacity-10 md:opacity-100 pointer-events-none">
+              <div className="w-24 h-24 md:w-48 md:h-48 bg-primary-light/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <div className="text-4xl md:text-8xl">🤖</div>
               </div>
             </div>
           </div>
@@ -168,8 +168,9 @@ const Dashboard = () => {
               <h2 className="text-xl font-serif font-bold">Recruitment Progress</h2>
               <button onClick={() => navigate('/shortlist')} className="text-xs font-bold text-primary px-4 py-1.5 bg-primary-light rounded-full">View Leaderboard</button>
             </div>
-            <div className="bg-white dark:bg-[#12122A] border border-border rounded-[32px] overflow-x-auto card-shadow scrollbar-hide">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-[#12122A] border border-border rounded-[32px] overflow-hidden card-shadow">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-[10px] font-bold text-text-muted uppercase tracking-widest bg-surface-light/50 dark:bg-white/5">
                     <th className="py-5 pl-8">Candidate ID</th>
@@ -247,14 +248,9 @@ const Dashboard = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (window.confirm(`Are you sure you want to delete Candidate #${row.originalId}?`)) {
-                                    console.log("Confirming deletion for:", row.originalId);
                                     MockDB.deleteCandidate(row.originalId);
-                                    
-                                    // Robust UI Refresh
                                     const freshData = MockDB.get();
-                                    const freshCandidates = [...(freshData.candidates || [])];
-                                    console.log("Setting fresh candidates list:", freshCandidates.length);
-                                    setCandidates(freshCandidates);
+                                    setCandidates([...(freshData.candidates || [])]);
                                     setMenuOpenId(null);
                                   }
                                 }}
@@ -270,6 +266,50 @@ const Dashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="md:hidden space-y-4 px-1">
+              {filteredProgress.map((row) => (
+                <div 
+                  key={row.originalId}
+                  onClick={() => handleRowClick(row.target, row.originalId)}
+                  className="bg-white dark:bg-[#12122A] border border-border rounded-2xl p-4 card-shadow active:scale-[0.98] transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary-light text-primary flex items-center justify-center text-[10px] font-black border border-primary/10">
+                        {row.originalId}
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-text dark:text-white">{row.id}</div>
+                        <div className="text-[10px] text-text-muted font-bold">{row.role}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[14px] font-black text-primary">{row.score}%</div>
+                      <div className="text-[8px] font-black text-text-muted uppercase tracking-widest">Match Score</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-border">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                      row.stage === 'Hired' ? 'bg-success-bg text-success' : 
+                      row.stage === 'Rejected' ? 'bg-error-bg text-error' : 
+                      'bg-primary-light text-primary'
+                    }`}>
+                      {row.stage}
+                    </span>
+                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                      row.status === 'Rejected' ? 'bg-error-bg text-error border-error/10' : 
+                      row.status === 'Shortlist' ? 'bg-success-bg text-success border-success/10' : 
+                      'bg-surface-light text-text-muted border-border'
+                    }`}>
+                      {row.status === 'Review' ? 'Reviewed' : row.status === 'Shortlist' ? 'Shortlisted' : row.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         </div>

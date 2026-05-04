@@ -74,6 +74,13 @@
   .sidebar-shadow {
     box-shadow: 2px 0 12px rgba(75, 78, 222, 0.06);
   }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @keyframes fadeInUp {

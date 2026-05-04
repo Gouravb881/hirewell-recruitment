@@ -144,17 +144,17 @@ const ShortlistDashboard = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto animate-fade-in-up">
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-text dark:text-white mb-2 tracking-tight">Ranked Shortlist</h1>
-          <div className="flex items-center gap-3">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div className="text-center md:text-left w-full md:w-auto">
+          <h1 className="text-2xl md:text-4xl font-serif font-bold text-text dark:text-white mb-2 tracking-tight">Ranked Shortlist</h1>
+          <div className="flex items-center justify-center md:justify-start gap-3">
              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/10">Clinical Audit v4.2</span>
              <p className="text-[10px] md:text-xs text-text-muted font-bold uppercase tracking-widest">{candidates.length} Profiles Scanned</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 w-full lg:w-auto">
-           <button onClick={handleExport} className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-white dark:bg-[#12122A] border border-border px-6 py-3 rounded-2xl text-sm font-bold text-text-mid hover:text-primary transition-all shadow-sm">
-              <Download size={18} /> Export CSV
+        <div className="flex items-center gap-4 w-full md:w-auto">
+           <button onClick={handleExport} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white dark:bg-[#12122A] border border-border px-6 py-3 rounded-2xl text-sm font-bold text-text-mid hover:text-primary transition-all shadow-sm">
+              <Download size={18} /> <span className="hidden sm:inline">Export CSV</span><span className="sm:hidden">Export</span>
            </button>
            <UserMenu user={user} />
         </div>
@@ -188,7 +188,8 @@ const ShortlistDashboard = () => {
         </div>
 
         <div className="lg:col-span-9">
-           <div className="bg-white dark:bg-[#12122A] border border-border rounded-[32px] overflow-hidden card-shadow">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-[#12122A] border border-border rounded-[32px] overflow-hidden card-shadow">
               <table className="w-full text-left border-collapse min-w-[800px]">
                  <thead>
                     <tr className="bg-surface-light dark:bg-white/5 border-b border-border text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
@@ -260,7 +261,67 @@ const ShortlistDashboard = () => {
                     )}
                  </tbody>
               </table>
-           </div>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="md:hidden space-y-4">
+              {sortedCandidates.map((c, i) => {
+                const m = matches.find(match => String(match.candidate_id) === String(c.id));
+                const score = m?.final_score || c.score || 0;
+                const decision = m?.decision || (score >= 80 ? 'Shortlist' : 'Review');
+                
+                return (
+                  <div 
+                    key={c.id}
+                    onClick={() => navigate('/scorecard', { state: { candidateId: c.id } })}
+                    className="bg-white dark:bg-[#12122A] border border-border rounded-2xl p-5 card-shadow relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 left-0 w-12 h-12 bg-surface-light dark:bg-white/5 flex items-center justify-center rounded-br-2xl border-r border-b border-border">
+                       <span className="font-serif text-xl font-black text-primary/30">{i + 1}</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center text-center mt-6 mb-6">
+                      <div className="w-14 h-14 rounded-2xl bg-primary-light text-primary flex items-center justify-center mb-4 shadow-inner">
+                        <UserCheck size={28} />
+                      </div>
+                      <div className="text-xs font-black text-text dark:text-white uppercase tracking-[0.2em] mb-1">#{c.id}</div>
+                      <div className="text-[10px] text-text-muted font-bold truncate max-w-full px-4">{c.name || c.file_name}</div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between gap-4 py-4 border-t border-border">
+                       <div className="flex-1">
+                          <div className="flex justify-between items-center mb-2">
+                             <span className="text-[8px] font-black text-text-muted uppercase tracking-widest">Match Strength</span>
+                             <span className="text-xs font-black text-primary">{score}%</span>
+                          </div>
+                          <div className="h-1.5 bg-surface-light dark:bg-white/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-primary" style={{ width: `${score}%` }}></div>
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-border">
+                       <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                         decision.toLowerCase() === 'shortlist' ? 'bg-success-bg text-success border-success/20' : 
+                         decision.toLowerCase() === 'review' ? 'bg-primary-light text-primary border-primary/20' :
+                         'bg-warning-bg text-warning border-warning/20'
+                       }`}>
+                         {decision}
+                       </span>
+                       <button className="text-primary text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                          View Details <ExternalLink size={12} />
+                       </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {sortedCandidates.length === 0 && (
+                 <div className="py-20 text-center bg-white dark:bg-[#12122A] rounded-2xl border border-border">
+                    <div className="text-5xl mb-4 opacity-10">🔍</div>
+                    <h3 className="font-serif font-bold text-lg text-text-muted">No Candidates Found</h3>
+                 </div>
+              )}
+            </div>   
         </div>
 
         <aside className="lg:col-span-3 space-y-6">
