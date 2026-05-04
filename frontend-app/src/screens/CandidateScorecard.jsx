@@ -134,9 +134,9 @@ const CandidateScorecard = () => {
   const recColor = score >= 85 ? 'text-success bg-success-bg border-success/10' : score >= 65 ? 'text-primary bg-primary-light border-primary/10' : 'text-warning bg-warning-bg border-warning/10';
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto animate-fade-in-up flex flex-col h-auto lg:h-[calc(100vh-2rem)]">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto animate-fade-in-up">
        {/* Header */}
-       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 shrink-0">
+       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-1">
              <h1 className="text-2xl md:text-3xl font-serif font-bold text-text">Candidate #{candidate.id}</h1>
@@ -153,12 +153,12 @@ const CandidateScorecard = () => {
           <UserMenu user={user} />
         </div>
       </header>
-
-       <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0 lg:overflow-hidden pb-4">
+ 
+       <div className="flex flex-col lg:flex-row gap-8 pb-10">
         {/* Left Side */}
-        <div className="flex-1 space-y-6 md:space-y-8 lg:overflow-y-auto lg:pr-4 custom-scrollbar">
+        <div className="flex-1 space-y-6 md:space-y-8">
            {/* Composite Score Card */}
-
+ 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="bg-white dark:bg-[#12122A] rounded-[24px] md:rounded-[32px] p-6 md:p-8 border border-border card-shadow">
                  <h3 className="font-serif font-bold text-lg mb-6 flex items-center gap-3">
